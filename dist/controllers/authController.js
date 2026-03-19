@@ -3,8 +3,13 @@ import User from '../models/User.js';
 import { generateToken } from '../utils/jwt.js';
 export const login = async (req, res) => {
     try {
-        const { email, password } = req.body;
-        const user = await User.findOne({ email });
+        const { email, password } = req.body; // 'email' can be email or phone
+        const user = await User.findOne({
+            $or: [
+                { email },
+                { phoneNumber: email }
+            ]
+        });
         if (!user) {
             return res.status(401).json({ message: 'Invalid email or password' });
         }

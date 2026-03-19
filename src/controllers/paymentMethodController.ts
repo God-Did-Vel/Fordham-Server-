@@ -1,74 +1,101 @@
 import { Request, Response } from 'express';
 import PaymentMethod from '../models/PaymentMethod.js';
 
-// @desc    Get all active payment methods (public/user)
-// @route   GET /api/payment-methods
+// @desc    Get all active payment methods
+// @route   GET /api/paymentmethods
 // @access  Public
-export const getPaymentMethods = async (req: Request, res: Response) => {
-    // If admin, return all. If user, return only active. Let's just return all for admin, active for guests.
-    // For simplicity, we just return all right now and filter in UI, or check auth here.
-    const query = req.baseUrl.includes('admin') ? {} : { isActive: true }; // Just getting active for now
-    const methods = await PaymentMethod.find(req.user ? {} : { isActive: true }); // Simplified check
-    res.json(methods);
-};
-
-// @desc    Get all payment methods (Admin)
-// @route   GET /api/payment-methods/admin
-// @access  Private/Admin
-export const getAdminPaymentMethods = async (req: Request, res: Response) => {
-    const methods = await PaymentMethod.find({});
-    res.json(methods);
-};
-
-// @desc    Create a new payment method
-// @route   POST /api/payment-methods
-// @access  Private/Admin
-export const createPaymentMethod = async (req: Request, res: Response) => {
-    const { provider, details, isActive } = req.body;
-
-    const method = new PaymentMethod({
-        provider,
-        details,
-        isActive: isActive !== undefined ? isActive : true,
-    });
-
-    const createdMethod = await method.save();
-    res.status(201).json(createdMethod);
-};
-
-// @desc    Delete a payment method
-// @route   DELETE /api/payment-methods/:id
-// @access  Private/Admin
-export const deletePaymentMethod = async (req: Request, res: Response) => {
-    const method = await PaymentMethod.findById(req.params.id);
-
-    if (method) {
-        await method.deleteOne();
-        res.json({ message: 'Payment method removed' });
-    } else {
-        res.status(404);
-        throw new Error('Payment method not found');
+export const getPaymentMethods = async (req: Request, res: Response): Promise<void> => {
+    try {
+        const paymentMethods = await PaymentMethod.find({ isActive: true });
+        res.json(paymentMethods);
+    } catch (error) {
+        console.error('Get payment methods error:', error);
+        res.status(500).json({
+            message: 'Server error getting payment methods',
+        });
     }
 };
 
-// @desc    Toggle active status
-// @route   PUT /api/payment-methods/:id
+// @desc    Create a new payment method
+// @route   POST /api/paymentmethods
 // @access  Private/Admin
-export const updatePaymentMethod = async (req: Request, res: Response) => {
-    const { provider, details, isActive } = req.body;
-    const method = await PaymentMethod.findById(req.params.id);
+export const createPaymentMethod = async (req: Request, res: Response): Promise<void> => {
+    try {
+        const { provider, details, isActive } = req.body;
 
-    if (method) {
-        method.provider = provider || method.provider;
-        method.details = details || method.details;
-        if (isActive !== undefined) {
-            method.isActive = isActive;
+        // Validation
+        if (!provider || !details) {
+            res.status(400).json({
+                message: 'Please provide provider and details',
+            });
+            return;
         }
 
-        const updatedMethod = await method.save();
-        res.json(updatedMethod);
-    } else {
-        res.status(404);
-        throw new Error('Payment method not found');
+        const paymentMethod = await PaymentMethod.create({
+            provider,
+            details,
+            isActive: isActive !== false, // Default to true if not specified
+        });
+
+        res.status(201).json(paymentMethod);
+    } catch (error) {
+        console.error('Create payment method error:', error);
+        res.status(500).json({
+            message: 'Server error creating payment method',
+        });
+    }
+};
+
+// @desc    Update a payment method
+// @route   PUT /api/paymentmethods/:id
+// @access  Private/Admin
+export const updatePaymentMethod = async (req: Request, res: Response): Promise<void> => {
+    try {
+        let paymentMethod = await PaymentMethod.findById(req.params.id);
+
+        if (!paymentMethod) {
+            res.status(404).json({
+                message: 'Payment method not found',
+            });
+            return;
+        }
+
+        paymentMethod.provider = req.body.provider || paymentMethod.provider;
+        paymentMethod.details = req.body.details || paymentMethod.details;
+        paymentMethod.isActive = req.body.isActive !== undefined ? req.body.isActive : paymentMethod.isActive;
+
+        const updatedPaymentMethod = await paymentMethod.save();
+        res.json(updatedPaymentMethod);
+    } catch (error) {
+        console.error('Update payment method error:', error);
+        res.status(500).json({
+            message: 'Server error updating payment method',
+        });
+    }
+};
+
+// @desc    Delete a payment method
+// @route   DELETE /api/paymentmethods/:id
+// @access  Private/Admin
+export const deletePaymentMethod = async (req: Request, res: Response): Promise<void> => {
+    try {
+        const paymentMethod = await PaymentMethod.findById(req.params.id);
+
+        if (!paymentMethod) {
+            res.status(404).json({
+                message: 'Payment method not found',
+            });
+            return;
+        }
+
+        await PaymentMethod.findByIdAndDelete(req.params.id);
+        res.json({
+            message: 'Payment method deleted successfully',
+        });
+    } catch (error) {
+        console.error('Delete payment method error:', error);
+        res.status(500).json({
+            message: 'Server error deleting payment method',
+        });
     }
 };

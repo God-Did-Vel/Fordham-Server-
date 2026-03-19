@@ -1,5 +1,7 @@
 import Booking from '../models/Booking.js';
 import Room from '../models/Room.js';
+import PaymentMethod from '../models/PaymentMethod.js';
+import { generateDynamicNigerianBankDetails } from '../utils/paymentGenerator.js';
 // @desc    Create new booking
 // @route   POST /api/bookings
 // @access  Public
@@ -28,7 +30,28 @@ export const createBooking = async (req, res) => {
         booking_status: 'pending',
     });
     const createdBooking = await booking.save();
-    res.status(201).json(createdBooking);
+    // Generate Bank Details using PaymentMethod config or fallback to generator
+    let paymentDetails;
+    const paymentMethods = await PaymentMethod.find({ isActive: true });
+    if (paymentMethods && paymentMethods.length > 0) {
+        const randomMethod = paymentMethods[Math.floor(Math.random() * paymentMethods.length)];
+        const prefixes = ["01", "02", "06", "04", "07"];
+        const prefix = prefixes[Math.floor(Math.random() * prefixes.length)];
+        const random8Digits = Math.floor(10000000 + Math.random() * 90000000).toString();
+        paymentDetails = {
+            bankName: randomMethod.provider,
+            accountNumber: `${prefix}${random8Digits}`,
+            accountName: `N&B Italian Hotel - ${Math.random().toString(36).substring(2, 6).toUpperCase()}`,
+            instructions: randomMethod.details
+        };
+    }
+    else {
+        paymentDetails = generateDynamicNigerianBankDetails();
+    }
+    res.status(201).json({
+        booking: createdBooking,
+        paymentDetails
+    });
 };
 // @desc    Get all bookings
 // @route   GET /api/bookings
@@ -73,7 +96,7 @@ export const updateBookingStatus = async (req, res) => {
 // @access  Private
 export const getMyBookings = async (req, res) => {
     // req.user is set by the protectUser middleware
-    const bookings = await Booking.find({ user_id: req.user._id }).populate('room_id', 'name slug price_per_night images');
+    const bookings = await Booking.find({ user_id: req.user._id }).populate('room_id', 'name slug price_per_night images description');
     res.json(bookings);
 };
 //# sourceMappingURL=bookingController.js.map

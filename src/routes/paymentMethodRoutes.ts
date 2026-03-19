@@ -1,21 +1,20 @@
 import express from 'express';
 import {
     getPaymentMethods,
-    getAdminPaymentMethods,
     createPaymentMethod,
-    deletePaymentMethod,
     updatePaymentMethod,
+    deletePaymentMethod,
 } from '../controllers/paymentMethodController.js';
 import { protectAdmin } from '../middleware/authMiddleware.js';
 
 const router = express.Router();
 
-// Public route to get active payment methods
-router.route('/').get(getPaymentMethods);
+// Public route - get all active payment methods
+router.get('/', getPaymentMethods);
 
-// Admin routes
-router.route('/admin').get(protectAdmin, getAdminPaymentMethods);
-router.route('/').post(protectAdmin, createPaymentMethod);
-router.route('/:id').put(protectAdmin, updatePaymentMethod).delete(protectAdmin, deletePaymentMethod);
+// Admin routes - require admin authentication
+router.post('/', protectAdmin, createPaymentMethod);
+router.put('/:id', protectAdmin, updatePaymentMethod);
+router.delete('/:id', protectAdmin, deletePaymentMethod);
 
 export default router;

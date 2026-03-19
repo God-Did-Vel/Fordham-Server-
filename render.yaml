@@ -1,0 +1,19 @@
+services:
+  - type: web
+    name: hotel-management-backend
+    runtime: node
+    plan: free
+    buildCommand: cd backend && npm install
+    startCommand: cd backend && npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 5000
+      - key: FRONTEND_ORIGIN
+        value: https://your-frontend-domain.vercel.app
+    maxInstances: 1
+    minInstances: 1
+    healthCheckPath: /
+    autoDeploy: true
+ 

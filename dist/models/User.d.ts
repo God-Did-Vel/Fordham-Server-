@@ -4,11 +4,13 @@ declare const User: mongoose.Model<{
     email: string;
     password: string;
     role: "admin" | "user";
+    phoneNumber?: string | null;
 } & mongoose.DefaultTimestampProps, {}, {}, {}, mongoose.Document<unknown, {}, {
     name: string;
     email: string;
     password: string;
     role: "admin" | "user";
+    phoneNumber?: string | null;
 } & mongoose.DefaultTimestampProps, {}, {
     timestamps: true;
 }> & {
@@ -16,6 +18,7 @@ declare const User: mongoose.Model<{
     email: string;
     password: string;
     role: "admin" | "user";
+    phoneNumber?: string | null;
 } & mongoose.DefaultTimestampProps & {
     _id: mongoose.Types.ObjectId;
 } & {
@@ -27,11 +30,13 @@ declare const User: mongoose.Model<{
     email: string;
     password: string;
     role: "admin" | "user";
+    phoneNumber?: string | null;
 } & mongoose.DefaultTimestampProps, mongoose.Document<unknown, {}, mongoose.FlatRecord<{
     name: string;
     email: string;
     password: string;
     role: "admin" | "user";
+    phoneNumber?: string | null;
 } & mongoose.DefaultTimestampProps>, {}, mongoose.MergeType<mongoose.DefaultSchemaOptions, {
     timestamps: true;
 }>> & mongoose.FlatRecord<{
@@ -39,6 +44,7 @@ declare const User: mongoose.Model<{
     email: string;
     password: string;
     role: "admin" | "user";
+    phoneNumber?: string | null;
 } & mongoose.DefaultTimestampProps> & {
     _id: mongoose.Types.ObjectId;
 } & {

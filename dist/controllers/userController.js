@@ -6,7 +6,12 @@ import bcrypt from 'bcryptjs';
 // @access  Public
 export const authUser = async (req, res) => {
     const { email, password } = req.body;
-    const user = await User.findOne({ email });
+    const user = await User.findOne({
+        $or: [
+            { email },
+            { phoneNumber: email }
+        ]
+    });
     if (user && (await bcrypt.compare(password, user.password))) {
         res.json({
             _id: user._id,
@@ -24,7 +29,7 @@ export const authUser = async (req, res) => {
 // @route   POST /api/users/register
 // @access  Public
 export const registerUser = async (req, res) => {
-    const { name, email, password } = req.body;
+    const { name, email, phoneNumber, password } = req.body;
     const userExists = await User.findOne({ email });
     if (userExists) {
         res.status(400);
@@ -35,6 +40,7 @@ export const registerUser = async (req, res) => {
     const user = await User.create({
         name,
         email,
+        phoneNumber,
         password: hashedPassword,
     });
     if (user) {
